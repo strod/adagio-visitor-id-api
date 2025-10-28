@@ -7,6 +7,7 @@ from typing import Optional, Dict
 from flask import Flask, request, jsonify
 from google.cloud import firestore
 from google.cloud import secretmanager
+from functions_framework import http
 import logging
 
 # Configure logging
@@ -174,10 +175,10 @@ def lookup_visitor_id():
         return jsonify({"error": "Internal Server Error", "message": "Internal server error during lookup", "status_code": 500}), 500
 
 # Google Cloud Functions entry point
-@functions_framework.http
+@http
 def main(request):
     """Entry point for Google Cloud Functions."""
-    return app(request)
+    return app(request.environ, lambda *args: None)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
