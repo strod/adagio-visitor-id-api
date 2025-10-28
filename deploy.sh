@@ -25,8 +25,8 @@ if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q
 fi
 
 # Set the project
-echo "Setting project to adagio-teas-visitor-ids..."
-gcloud config set project adagio-teas-visitor-ids
+echo "Setting project to retail-api-397423..."
+gcloud config set project retail-api-397423
 
 # Deploy the function
 echo "Deploying function $FUNCTION_NAME to region $REGION..."
@@ -40,11 +40,11 @@ gcloud functions deploy $FUNCTION_NAME \
     --timeout=$TIMEOUT \
     --max-instances=$MAX_INSTANCES \
     --allow-unauthenticated \
-    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
+    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=retail-api-397423,FIRESTORE_DATABASE_ID=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
 
 if [ $? -eq 0 ]; then
     echo "✅ Function deployed successfully!"
-    echo "Function URL: https://$REGION-adagio-teas-visitor-ids.cloudfunctions.net/$FUNCTION_NAME"
+    echo "Function URL: https://$REGION-retail-api-397423.cloudfunctions.net/$FUNCTION_NAME"
 else
     echo "❌ Deployment failed!"
     exit 1

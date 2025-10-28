@@ -13,7 +13,8 @@ MAX_INSTANCES = "10"
 # Environment variables
 ENVIRONMENT_VARIABLES = {
     "API_SECRET_KEY": "your-secret-key-change-in-production",
-    "GOOGLE_CLOUD_PROJECT": "adagio-teas-visitor-ids",
+    "GOOGLE_CLOUD_PROJECT": "retail-api-397423",
+    "FIRESTORE_DATABASE_ID": "adagio-teas-visitor-ids",
     "API_TOKENS_SECRET_NAME": "adagio-visitorid-fastapi-tokens"
 }
 
@@ -29,5 +30,5 @@ gcloud functions deploy {FUNCTION_NAME} \\
     --timeout={TIMEOUT} \\
     --max-instances={MAX_INSTANCES} \\
     --allow-unauthenticated \\
-    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
+    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=retail-api-397423,FIRESTORE_DATABASE_ID=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
 """

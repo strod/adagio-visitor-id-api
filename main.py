@@ -23,7 +23,7 @@ app = FastAPI(
 )
 
 # Initialize Firestore client
-db = firestore.Client(project="adagio-teas-visitor-ids")
+db = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DATABASE_ID)
 
 # Pydantic models
 class LookupRequest(BaseModel):
@@ -41,7 +41,8 @@ class ErrorResponse(BaseModel):
 
 # API Key configuration
 API_SECRET_KEY = os.getenv("API_SECRET_KEY", "your-secret-key-change-in-production")
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "adagio-teas-visitor-ids")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "retail-api-397423")
+FIRESTORE_DATABASE_ID = os.getenv("FIRESTORE_DATABASE_ID", "adagio-teas-visitor-ids")
 
 # Secret Manager client
 secret_client = secretmanager.SecretManagerServiceClient()
