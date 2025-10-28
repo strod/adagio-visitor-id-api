@@ -1,4 +1,4 @@
-fastapi==0.104.1
+fastapi==0.110.0
 uvicorn==0.24.0
 google-cloud-firestore==2.13.1
 google-cloud-secret-manager==2.16.4
@@ -8,4 +8,3 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
 functions-framework==3.9.1
-starlette==0.37.0
