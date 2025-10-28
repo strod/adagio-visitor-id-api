@@ -1,0 +1,33 @@
+# Google Cloud Functions deployment configuration
+# This file contains the configuration for deploying the FastAPI app to Google Cloud Functions
+
+# Function configuration
+FUNCTION_NAME = "adagio-visitor-id-lookup"
+REGION = "us-central1"
+RUNTIME = "python312"
+ENTRY_POINT = "main"
+MEMORY = "256MB"
+TIMEOUT = "60s"
+MAX_INSTANCES = "10"
+
+# Environment variables
+ENVIRONMENT_VARIABLES = {
+    "API_SECRET_KEY": "your-secret-key-change-in-production",
+    "GOOGLE_CLOUD_PROJECT": "adagio-teas-visitor-ids",
+    "API_TOKENS_SECRET_NAME": "adagio-api-tokens"
+}
+
+# Deployment command template
+DEPLOYMENT_COMMAND = f"""
+gcloud functions deploy {FUNCTION_NAME} \\
+    --gen2 \\
+    --runtime={RUNTIME} \\
+    --region={REGION} \\
+    --source=. \\
+    --entry-point={ENTRY_POINT} \\
+    --memory={MEMORY} \\
+    --timeout={TIMEOUT} \\
+    --max-instances={MAX_INSTANCES} \\
+    --allow-unauthenticated \\
+    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-api-tokens"
+"""
