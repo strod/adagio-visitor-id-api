@@ -22,6 +22,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# API Key configuration
+API_SECRET_KEY = os.getenv("API_SECRET_KEY", "your-secret-key-change-in-production")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "retail-api-397423")
+FIRESTORE_DATABASE_ID = os.getenv("FIRESTORE_DATABASE_ID", "adagio-teas-visitor-ids")
+
+# Secret Manager client
+secret_client = secretmanager.SecretManagerServiceClient()
+
 # Initialize Firestore client
 db = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DATABASE_ID)
 
@@ -38,14 +46,6 @@ class ErrorResponse(BaseModel):
     error: str
     message: str
     status_code: int
-
-# API Key configuration
-API_SECRET_KEY = os.getenv("API_SECRET_KEY", "your-secret-key-change-in-production")
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "retail-api-397423")
-FIRESTORE_DATABASE_ID = os.getenv("FIRESTORE_DATABASE_ID", "adagio-teas-visitor-ids")
-
-# Secret Manager client
-secret_client = secretmanager.SecretManagerServiceClient()
 
 def get_api_tokens() -> Dict[str, str]:
     """
@@ -232,11 +232,11 @@ async def internal_error_handler(request, exc):
 # Google Cloud Functions entry point
 def main(request):
     """Entry point for Google Cloud Functions."""
-    import uvicorn
     from fastapi import Request
     from fastapi.responses import Response
+    import uvicorn
     
-    # Handle the request
+    # Handle the request using FastAPI
     return app(request)
 
 if __name__ == "__main__":
