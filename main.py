@@ -174,6 +174,7 @@ def lookup_visitor_id():
         return jsonify({"error": "Internal Server Error", "message": "Internal server error during lookup", "status_code": 500}), 500
 
 # Google Cloud Functions entry point
+@functions_framework.http
 def main(request):
     """Entry point for Google Cloud Functions."""
     return app(request)
