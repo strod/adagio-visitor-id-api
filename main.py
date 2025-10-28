@@ -53,7 +53,7 @@ def get_api_tokens() -> Dict[str, str]:
     """
     try:
         # Get the secret name from environment variable
-        secret_name = os.getenv("API_TOKENS_SECRET_NAME", "adagio-api-tokens")
+        secret_name = os.getenv("API_TOKENS_SECRET_NAME", "adagio-visitorid-fastapi-tokens")
         
         # Build the resource name of the secret version
         name = f"projects/{PROJECT_ID}/secrets/{secret_name}/versions/latest"

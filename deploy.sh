@@ -40,7 +40,7 @@ gcloud functions deploy $FUNCTION_NAME \
     --timeout=$TIMEOUT \
     --max-instances=$MAX_INSTANCES \
     --allow-unauthenticated \
-    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-api-tokens"
+    --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
 
 if [ $? -eq 0 ]; then
     echo "✅ Function deployed successfully!"
