@@ -29,6 +29,7 @@ gcloud functions deploy {FUNCTION_NAME} \\
     --memory={MEMORY} \\
     --timeout={TIMEOUT} \\
     --max-instances={MAX_INSTANCES} \\
+    --trigger-http \\
     --allow-unauthenticated \\
     --set-env-vars="API_SECRET_KEY=your-secret-key-change-in-production,GOOGLE_CLOUD_PROJECT=retail-api-397423,FIRESTORE_DATABASE_ID=adagio-teas-visitor-ids,API_TOKENS_SECRET_NAME=adagio-visitorid-fastapi-tokens"
 """

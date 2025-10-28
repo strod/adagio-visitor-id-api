@@ -4,23 +4,17 @@ import hmac
 import json
 from datetime import datetime
 from typing import Optional, Dict
-from fastapi import FastAPI, HTTPException, Header, Depends
-from fastapi.responses import JSONResponse
+from flask import Flask, request, jsonify
 from google.cloud import firestore
 from google.cloud import secretmanager
-from pydantic import BaseModel
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="Adagio Visitor ID Lookup API",
-    description="API for looking up visitor IDs from Firestore database",
-    version="1.0.0"
-)
+# Initialize Flask app
+app = Flask(__name__)
 
 # API Key configuration
 API_SECRET_KEY = os.getenv("API_SECRET_KEY", "your-secret-key-change-in-production")
@@ -32,20 +26,6 @@ secret_client = secretmanager.SecretManagerServiceClient()
 
 # Initialize Firestore client
 db = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DATABASE_ID)
-
-# Pydantic models
-class LookupRequest(BaseModel):
-    user_id: str
-
-class LookupResponse(BaseModel):
-    visitor_id: str
-    user_id: str
-    found_at: str
-
-class ErrorResponse(BaseModel):
-    error: str
-    message: str
-    status_code: int
 
 def get_api_tokens() -> Dict[str, str]:
     """
@@ -113,56 +93,55 @@ def verify_api_key(api_key: str) -> bool:
     # In production, you might want to store checksums separately
     return True
 
-def get_api_key(authorization: Optional[str] = Header(None)) -> str:
-    """Dependency to extract and validate API key from header."""
+def get_api_key():
+    """Extract and validate API key from header."""
+    authorization = request.headers.get('Authorization')
     if not authorization:
-        raise HTTPException(
-            status_code=401,
-            detail="API key required in Authorization header"
-        )
+        return None, jsonify({"error": "Unauthorized", "message": "API key required in Authorization header", "status_code": 401}), 401
     
     if not verify_api_key(authorization):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key"
-        )
+        return None, jsonify({"error": "Unauthorized", "message": "Invalid API key", "status_code": 401}), 401
     
-    return authorization
+    return authorization, None, None
 
-@app.get("/")
-async def root():
+@app.route('/')
+def root():
     """Health check endpoint."""
-    return {"message": "Adagio Visitor ID Lookup API", "status": "healthy"}
+    return jsonify({"message": "Adagio Visitor ID Lookup API", "status": "healthy"})
 
-@app.get("/health")
-async def health_check():
+@app.route('/health')
+def health_check():
     """Health check endpoint for monitoring."""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return jsonify({"status": "healthy", "timestamp": datetime.utcnow().isoformat()})
 
-@app.post("/lookup", response_model=LookupResponse)
-async def lookup_visitor_id(
-    request: LookupRequest,
-    api_key: str = Depends(get_api_key)
-):
+@app.route('/lookup', methods=['POST'])
+def lookup_visitor_id():
     """
     Lookup visitor ID by user ID from Firestore database.
     
-    Args:
-        request: LookupRequest containing user_id
-        api_key: Valid API key from Authorization header
-        
     Returns:
-        LookupResponse with visitor_id, user_id, and timestamp
+        JSON response with visitor_id, user_id, and timestamp
         
     Raises:
-        HTTPException: 404 if user_id not found, 500 for server errors
+        404 if user_id not found, 500 for server errors
     """
+    # Check API key
+    api_key, error_response, status_code = get_api_key()
+    if error_response:
+        return error_response, status_code
+    
     try:
-        logger.info(f"Looking up visitor ID for user_id: {request.user_id}")
+        # Get user_id from request
+        data = request.get_json()
+        if not data or 'user_id' not in data:
+            return jsonify({"error": "Bad Request", "message": "user_id is required", "status_code": 400}), 400
+        
+        user_id = data['user_id']
+        logger.info(f"Looking up visitor ID for user_id: {user_id}")
         
         # Query Firestore for the document with user_id
         collection_ref = db.collection("visitor_ids")
-        query = collection_ref.where("user_id", "==", request.user_id).limit(1)
+        query = collection_ref.where("user_id", "==", user_id).limit(1)
         docs = query.stream()
         
         # Check if document exists
@@ -173,72 +152,31 @@ async def lookup_visitor_id(
             doc_found = True
             data = doc.to_dict()
             visitor_id = data.get("visitor_id")
-            logger.info(f"Found visitor_id: {visitor_id} for user_id: {request.user_id}")
+            logger.info(f"Found visitor_id: {visitor_id} for user_id: {user_id}")
             break
         
         if not doc_found:
-            logger.warning(f"No visitor ID found for user_id: {request.user_id}")
-            raise HTTPException(
-                status_code=404,
-                detail=f"No visitor ID found for user_id: {request.user_id}"
-            )
+            logger.warning(f"No visitor ID found for user_id: {user_id}")
+            return jsonify({"error": "Not Found", "message": f"No visitor ID found for user_id: {user_id}", "status_code": 404}), 404
         
         if not visitor_id:
-            logger.error(f"Visitor ID field missing for user_id: {request.user_id}")
-            raise HTTPException(
-                status_code=500,
-                detail="Visitor ID field missing in database record"
-            )
+            logger.error(f"Visitor ID field missing for user_id: {user_id}")
+            return jsonify({"error": "Internal Server Error", "message": "Visitor ID field missing in database record", "status_code": 500}), 500
         
-        return LookupResponse(
-            visitor_id=visitor_id,
-            user_id=request.user_id,
-            found_at=datetime.utcnow().isoformat()
-        )
+        return jsonify({
+            "visitor_id": visitor_id,
+            "user_id": user_id,
+            "found_at": datetime.utcnow().isoformat()
+        })
         
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error looking up visitor ID for user_id {request.user_id}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail="Internal server error during lookup"
-        )
-
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    """Custom 404 handler."""
-    return JSONResponse(
-        status_code=404,
-        content={"error": "Not Found", "message": str(exc.detail), "status_code": 404}
-    )
-
-@app.exception_handler(401)
-async def unauthorized_handler(request, exc):
-    """Custom 401 handler."""
-    return JSONResponse(
-        status_code=401,
-        content={"error": "Unauthorized", "message": str(exc.detail), "status_code": 401}
-    )
-
-@app.exception_handler(500)
-async def internal_error_handler(request, exc):
-    """Custom 500 handler."""
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal Server Error", "message": str(exc.detail), "status_code": 500}
-    )
+        logger.error(f"Error looking up visitor ID for user_id {user_id}: {str(e)}")
+        return jsonify({"error": "Internal Server Error", "message": "Internal server error during lookup", "status_code": 500}), 500
 
 # Google Cloud Functions entry point
 def main(request):
     """Entry point for Google Cloud Functions."""
-    from fastapi import Request
-    from fastapi.responses import Response
-    import uvicorn
-    
-    # Handle the request using FastAPI
     return app(request)
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080, debug=True)
