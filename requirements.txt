@@ -7,4 +7,3 @@ pydantic==2.5.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
-functions-framework==3.9.1
